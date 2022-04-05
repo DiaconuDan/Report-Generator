@@ -1,27 +1,33 @@
-import React from 'react';
-import logo from './logo.svg';
-import monitor from './assets/delimiter.svg';
-import './App.css';
+import React, { useState } from "react";
+import styled from "styled-components";
+import Header from "./components/Header";
+import NavBar from "./components/Navbar";
+import ReportsArea from "./components/ReportsArea";
+
+const ContentWrapper= styled.div`
+  display: flex;
+  padding-top: 20px;
+  padding-left: 35px;
+  gap: 25px;
+`;
+
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={monitor}  />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div>
+      <Header />
+
+      <ContentWrapper>
+        <NavBar /> 
+        <ReportsArea />  
+        {/* in theory here we should have page routes instead of directly showing reports */}
+      </ContentWrapper>
     </div>
   );
 }
 
 export default App;
+
+
+
+
