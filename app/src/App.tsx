@@ -13,9 +13,13 @@ const ContentWrapper= styled.div`
 
 
 function App() {
+
+  const firstName = "John" ;
+  const lastName = "Doe" ;
+
   return (
     <div>
-      <Header />
+      <Header  firstName={firstName} lastName={lastName} />
 
       <ContentWrapper>
         <NavBar /> 
