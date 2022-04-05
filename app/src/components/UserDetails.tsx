@@ -33,7 +33,7 @@ const UserDetails = (props: BackDropProps) => {
       <Container>
         <UserChip firstName={firstName} lastName={lastName} />
         <Fullname>
-          {firstName} {lastName}{" "}
+          {firstName} {lastName}
         </Fullname>
       </Container>
     </Wrapper>
