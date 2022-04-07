@@ -1,6 +1,8 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 import styled from "styled-components";
-import DownArrow from "../assets/downArrow.svg";
+import { mapReportsToProjects } from '../utils/utils'
+
 
 const Container = styled.div`
   width: 100%;
@@ -44,10 +46,41 @@ const StyledButton = styled.button`
   background: #005b96;
   border-radius: 5px;
   color: #ffffff;
-  
 `;
 
+const PROJECTS_URL = "http://178.63.13.157:8090/mock-api/api/projects";
+const GATEWAYS_URL = "http://178.63.13.157:8090/mock-api/api/gateways";
+const REPORTS_URL = "http://178.63.13.157:8090/mock-api/api/report";
+
+
+
+
 const ReportsArea = () => {
+    const [isLoading, setIsLoading ] = useState(true);
+    const [projects, setProjects] = useState([]);
+
+  React.useEffect(() => {
+    const fetchGateways = async () => axios.get(GATEWAYS_URL);
+    const fetchProjects = async () => axios.get(PROJECTS_URL);
+    const postReports = async () =>
+      axios({
+        method: "post",
+        url: REPORTS_URL,
+        data: {},
+      });
+
+    (async () => {
+      const getAways = await fetchGateways();
+      const getProjects = await fetchProjects();
+      const getReports = await postReports();
+
+      const projects = mapReportsToProjects(getReports.data.data, getProjects.data.data, getAways.data.data);
+
+      setProjects(projects);
+    })();
+  }, []);
+
+
   return (
     <Container>
       <PageInformation>
