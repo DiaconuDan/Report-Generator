@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import styled from "styled-components";
-import { mapReportsToProjects } from '../utils/utils'
-
+import { mapReportsToProjects, getTableInstructions, getTableProps } from "../utils/utils";
+import DatePicker from "react-datepicker";
+import Table from "./Table";
 
 const Container = styled.div`
   width: 100%;
@@ -48,16 +49,40 @@ const StyledButton = styled.button`
   color: #ffffff;
 `;
 
+export const DatesWrapper = styled.div`
+  display: flex;
+  align-items: center;
+  min-width: 428px;
+`;
+
+export const DateSelectionContainer = styled.div`
+  padding-bottom: 35px;
+  .react-datepicker-wrapper {
+    width: auto;
+  }
+`;
+
 const PROJECTS_URL = "http://178.63.13.157:8090/mock-api/api/projects";
 const GATEWAYS_URL = "http://178.63.13.157:8090/mock-api/api/gateways";
 const REPORTS_URL = "http://178.63.13.157:8090/mock-api/api/report";
 
-
-
+enum TableDataDelegator {
+    ShouldRenderAllProjects = "ShouldRenderAllProjects",
+    ShouldRenderAllProjectsByGateway = "ShouldRenderAllProjectsByGateway",
+    ShouldRenderGateWayByProject ="ShouldRenderGateWayByProject",
+    ShouldRenderAllGatewaysByProject = "ShouldRenderAllGatewaysByProject",
+    ShouldNotRender = "ShouldNotRender",
+  }
+  
 
 const ReportsArea = () => {
-    const [isLoading, setIsLoading ] = useState(true);
-    const [projects, setProjects] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [projects, setProjects] = useState([]);
+  const [projectSelection, setProjectSelection] = useState("All projects");
+  const [gatewaySelection, setGatewaySelection] = useState("All gateways");
+  const [startDate, setStartDate] = useState<Date>();
+  const [endDate, setEndDate] = useState<Date>();
+  const [tableRenderInstruction, setTableRenderInstruction] = useState<TableDataDelegator>(TableDataDelegator.ShouldNotRender) ;
 
   React.useEffect(() => {
     const fetchGateways = async () => axios.get(GATEWAYS_URL);
@@ -74,12 +99,32 @@ const ReportsArea = () => {
       const getProjects = await fetchProjects();
       const getReports = await postReports();
 
-      const projects = mapReportsToProjects(getReports.data.data, getProjects.data.data, getAways.data.data);
+      const projects = mapReportsToProjects(
+        getReports.data.data,
+        getProjects.data.data,
+        getAways.data.data
+      );
 
       setProjects(projects);
     })();
   }, []);
 
+  const onProjectChange = (e: any) => {
+    setProjectSelection(e.target.value);
+  };
+
+  const onGatewayChange = (e: any) => {
+    setGatewaySelection(e.target.value);
+  };
+
+  const onReportGenerate = () => {
+    const tableInstructions: TableDataDelegator = getTableInstructions(
+      projectSelection,
+      gatewaySelection
+    );
+
+    alert(tableInstructions);
+  };
 
   return (
     <Container>
@@ -87,25 +132,36 @@ const ReportsArea = () => {
         <Title>Reports</Title>
 
         <SelectsContainer>
-          <StyledSelect>
-            <option value="volvo" selected>
-              Select a project
-            </option>
+          <StyledSelect value={projectSelection} onChange={onProjectChange}>
+            <option value="All projects">All projects</option>
             <option value="saab">Saab</option>
           </StyledSelect>
-          <StyledSelect>
-            <option value="volvo">Select Gateway</option>
+          <StyledSelect value={gatewaySelection} onChange={onGatewayChange}>
+            <option value="All gateways">All Gateways</option>
             <option value="saab">Saab</option>
           </StyledSelect>
-          <StyledSelect>
-            <option value="volvo">From date</option>
-            <option value="saab">Saab</option>
-          </StyledSelect>
-          <StyledSelect>
-            <option value="volvo">To date</option>
-            <option value="saab">Saab</option>
-          </StyledSelect>
-          <StyledButton> Generate report</StyledButton>
+          <DateSelectionContainer>
+            <DatesWrapper>
+              <DatePicker
+                dateFormat="dd/MM/yyyy"
+                placeholderText="Select Date"
+                selected={startDate}
+                onChange={(date: any) => setStartDate(date as Date)}
+                selectsStart
+                startDate={startDate}
+              />
+              <DatePicker
+                dateFormat="dd/MM/yyyy"
+                placeholderText="Select Date"
+                selected={endDate}
+                onChange={(date: any) => setEndDate(date as Date)}
+                selectsStart
+                startDate={endDate}
+              />
+            </DatesWrapper>
+          </DateSelectionContainer>
+          <button onClick={onReportGenerate}> Generate report </button>
+          <Table props={getTableProps(tableRenderInstruction, projects)} />
         </SelectsContainer>
       </PageInformation>
       <Subtitle>Easily generate a report for your transactions</Subtitle>

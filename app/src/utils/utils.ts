@@ -5,6 +5,10 @@ interface Payment {
   modified: string;
 }
 
+interface PaymentWithGateway extends Payment {
+  gateway: Gateway;
+}
+
 interface Gateway {
   gatewayId: string;
   name: string;
@@ -16,6 +20,14 @@ interface Project {
   projectId: string;
   name: string;
   gateways: Gateway[];
+}
+
+enum TableDataDelegator {
+  ShouldRenderAllProjects = "ShouldRenderAllProjects",
+  ShouldRenderAllProjectsByGateway = "ShouldRenderAllProjectsByGateway",
+  ShouldRenderGateWayByProject = "ShouldRenderGateWayByProject",
+  ShouldRenderAllGatewaysByProject = "ShouldRenderAllGatewaysByProject",
+  ShouldNotRender = "ShouldNotRender",
 }
 
 export const mapReportsToProjects = (
@@ -96,4 +108,81 @@ export const mapReportsToProjects = (
 
     return acc;
   }, []);
+};
+
+export const getTableInstructions = (
+  projectSelection: string,
+  gatewaySelection: string
+) => {
+  console.log(projectSelection);
+  console.log(gatewaySelection);
+  const allProjects = projectSelection === "All projects";
+  const singleProject = !allProjects && projectSelection !== "Select a project";
+  const allGateways = gatewaySelection === "All gateways";
+  const singleGateway = !allGateways && gatewaySelection !== "Select a gateway";
+
+  if (allProjects && allGateways) {
+    return TableDataDelegator.ShouldRenderAllProjects;
+  }
+
+  if (allProjects && singleGateway) {
+    return TableDataDelegator.ShouldRenderAllProjectsByGateway;
+  }
+
+  if (singleProject && singleGateway) {
+    return TableDataDelegator.ShouldRenderGateWayByProject;
+  }
+
+  if (singleProject && allGateways) {
+    return TableDataDelegator.ShouldRenderAllGatewaysByProject;
+  }
+
+  return TableDataDelegator.ShouldNotRender;
+};
+
+type PaymentHeader = ["Date", "Transaction", "Amount"];
+
+type PaymentWithGatewayHeader = ["Date", "Gateway", "Transaction", "Amount"];
+
+interface ReportsTable {
+  totalAmount: number;
+  extandableRows?: {
+    name: string;
+    amount: number;
+  };
+  paymentsTable: {
+    rows: (Payment | PaymentWithGateway)[];
+    headers: PaymentHeader | PaymentWithGatewayHeader;
+  };
+}
+
+const getAllProjectsTableProps = (projects: any) => {
+  const tableProps = {};
+
+  const ExpandableRowNames = projects.map((project: any) => project.name);
+
+  const ExpandableRowTotal = projects.reduce(
+    (projectsAcc: any, currentProject: any) => {
+      const { name: projectName, projectId, gateways } = currentProject;
+      let totalProjectSum = 0;
+      let totalGatewaySum = 0;
+
+      const extandableRows = gateways.reduce(
+        (paymentsAcc: any, currentPayment: any) => {},
+        []
+      );
+    },
+    []
+  );
+
+  return { ExpandableRowNames };
+};
+
+export const getTableProps = (operation: TableDataDelegator, projects: any) => {
+  switch (operation) {
+    case TableDataDelegator.ShouldRenderAllProjects:
+      return getAllProjectsTableProps(projects);
+    default:
+      return getAllProjectsTableProps(projects);
+  }
 };
