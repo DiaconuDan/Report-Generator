@@ -84,7 +84,7 @@ const ReportsArea = () => {
   const [endDate, setEndDate] = useState<Date>();
   const [tableRenderInstruction, setTableRenderInstruction] = useState<TableDataDelegator>(TableDataDelegator.ShouldNotRender) ;
 
-  React.useEffect(() => {
+  React.useEffect(() => { // TO BE updated with react query
     const fetchGateways = async () => axios.get(GATEWAYS_URL);
     const fetchProjects = async () => axios.get(PROJECTS_URL);
     const postReports = async () =>

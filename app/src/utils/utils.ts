@@ -1,3 +1,5 @@
+import { access } from "fs";
+
 interface Payment {
   paymentId: string;
   amount: string;
@@ -6,7 +8,7 @@ interface Payment {
 }
 
 interface PaymentWithGateway extends Payment {
-  gateway: Gateway;
+  gatewayName: string;
 }
 
 interface Gateway {
@@ -36,14 +38,8 @@ export const mapReportsToProjects = (
   gateways: any
 ) => {
   return reports.reduce((acc: any, currentPayment: any) => {
-    const {
-      amount,
-      created,
-      modified,
-      paymentId,
-      projectId,
-      gatewayId,
-    } = currentPayment;
+    const { amount, created, modified, paymentId, projectId, gatewayId } =
+      currentPayment;
     const currentProjectIndex = acc?.findIndex(
       (element: Project) => element.projectId === projectId
     );
@@ -145,37 +141,71 @@ type PaymentHeader = ["Date", "Transaction", "Amount"];
 type PaymentWithGatewayHeader = ["Date", "Gateway", "Transaction", "Amount"];
 
 interface ReportsTable {
+  paymentsTableColumns: PaymentHeader | PaymentWithGatewayHeader;
   totalAmount: number;
-  extandableRows?: {
-    name: string;
-    amount: number;
-  };
-  paymentsTable: {
-    rows: (Payment | PaymentWithGateway)[];
-    headers: PaymentHeader | PaymentWithGatewayHeader;
-  };
+  rows: [
+    {
+      extendableHeader: {
+        name: string;
+        amount: number;
+      };
+      paymentsTableRows: (Payment | PaymentWithGateway)[];
+    }
+  ];
 }
 
 const getAllProjectsTableProps = (projects: any) => {
-  const tableProps = {};
+  const myRows: any[] = [];
 
-  const ExpandableRowNames = projects.map((project: any) => project.name);
+  let tableProps = {
+    paymentsTableColumns: ["Date", "Gateway", "Transaction", "Amount"],
+    rows: myRows,
+    totalAmount: 0,
+  };
 
-  const ExpandableRowTotal = projects.reduce(
-    (projectsAcc: any, currentProject: any) => {
-      const { name: projectName, projectId, gateways } = currentProject;
-      let totalProjectSum = 0;
-      let totalGatewaySum = 0;
+  let totalTableAmount = 0;
 
-      const extandableRows = gateways.reduce(
-        (paymentsAcc: any, currentPayment: any) => {},
-        []
-      );
-    },
-    []
-  );
+  projects.forEach((project: any) => {
+    const { name: projectName, gateways } = project;
 
-  return { ExpandableRowNames };
+    let totalProjectAmount = 0;
+    let paymentsRows: any[] = [];
+
+    gateways.forEach((gateway: any) => {
+      const { name: gatewayName } = gateway;
+
+      gateway.payments.forEach((payment: any) => {
+        totalTableAmount += payment.amount;
+        totalProjectAmount += payment.amount;
+
+        const paymentWithGateway = { ...payment, gateway: gatewayName };
+
+        paymentsRows.push(paymentWithGateway);
+      });
+    });
+
+    const extandableHeader = {
+      name: projectName,
+      amount: totalProjectAmount,
+    };
+
+    const row = {
+      extandableHeader: extandableHeader,
+      paymentsTableRows: paymentsRows,
+    };
+
+    tableProps = {
+      ...tableProps,
+      rows: [...tableProps.rows, row],
+    };
+  });
+
+  tableProps = {
+    ...tableProps,
+    totalAmount: totalTableAmount,
+  };
+
+  return tableProps;
 };
 
 export const getTableProps = (operation: TableDataDelegator, projects: any) => {
